@@ -4,9 +4,34 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Missions Abdalah</title>
-<style>html,body{margin:0;height:100%;background:#EEF2F0}iframe{display:block;border:0;width:100%;height:100%}@media (prefers-color-scheme:dark){html,body{background:#0E1412}}</style>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<style>html,body{margin:0;height:100%;background:#F4F5F7;color:#4A5262;font:14px system-ui,sans-serif}@media (prefers-color-scheme:dark){html,body{background:#0F131A;color:#AEB5C2}}#l{min-height:100%;display:grid;place-items:center}#l a{color:#3B5BDB}</style>
 </head>
 <body>
-<iframe src="https://script.google.com/macros/s/AKfycbwpQTcv-_spNVSmTGgza2RtqWnEk7KTKAwhttDLxjjpCagD41Zb_wMMKx_jZ3vf09kz/exec" title="Missions Abdalah" allow="clipboard-write"></iframe>
+<div id="l">Chargement de Missions…</div>
+<script>
+(function () {
+  var API = "https://script.google.com/macros/s/AKfycbwpQTcv-_spNVSmTGgza2RtqWnEk7KTKAwhttDLxjjpCagD41Zb_wMMKx_jZ3vf09kz/exec";
+  var K = "missions.app.code", app = null;
+  function boot(html) {
+    html = html.replace("<head>", "<head><script>window.MISSIONS_API=" + JSON.stringify(API) + "<\/script>");
+    document.open(); document.write(html); document.close();
+  }
+  try { app = JSON.parse(localStorage.getItem(K) || "null"); } catch (e) {}
+  if (app && app.html) boot(app.html);
+  fetch(API + "?asset=app&v=" + encodeURIComponent((app && app.v) || ""))
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j.meme) return;
+      try { localStorage.setItem(K, JSON.stringify(j)); } catch (e) {}
+      if (!app || !app.html) boot(j.html); else window.dispatchEvent(new CustomEvent("missions-maj"));
+    })
+    .catch(function () {
+      // serveur pas encore à jour : on affiche la version Google classique
+      if (!app || !app.html) document.body.innerHTML = '<iframe src="' + API + '" title="Missions Abdalah" style="display:block;border:0;width:100%;height:100%"></iframe>';
+    });
+})();
+</script>
 </body>
 </html>
