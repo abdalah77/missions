@@ -6,7 +6,7 @@
 <title>Missions Abdalah</title>
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://script.googleusercontent.com">
-<style>html,body{margin:0;height:100%;background:#F4F5F7;color:#4A5262;font:14px system-ui,sans-serif}@media (prefers-color-scheme:dark){html,body{background:#0F131A;color:#AEB5C2}}#l{min-height:100%;display:grid;place-items:center}#l a{color:#3B5BDB}</style>
+<style>html,body{margin:0;height:100%;background:#F4F5F7;color:#4A5262;font:14px system-ui,sans-serif}@media (prefers-color-scheme:dark){html,body{background:#0F131A;color:#AEB5C2}}#l{min-height:100%;display:grid;place-items:center;text-align:center;padding:0 16px;box-sizing:border-box}#l small{color:#8A93A3}#l a{color:#3B5BDB}</style>
 </head>
 <body>
 <div id="l">Chargement de Missions…</div>
@@ -14,6 +14,9 @@
 (function () {
   var API = "https://script.google.com/macros/s/AKfycbwpQTcv-_spNVSmTGgza2RtqWnEk7KTKAwhttDLxjjpCagD41Zb_wMMKx_jZ3vf09kz/exec";
   var K = "missions.app.code", app = null;
+  // vrai site = contient l'écran de connexion et n'est pas cette page de chargement
+  var ok = function (h) { return typeof h === "string" && h.indexOf('id="loginForm"') > 0 && h.indexOf(K) < 0; };
+  var msg = function (t) { var l = document.getElementById("l"); if (l) l.innerHTML = t; };
   function boot(html) {
     html = html.replace("<head>", "<head><script>window.MISSIONS_API=" + JSON.stringify(API) + "<\/script>");
     // attendre la fin de la lecture de cette page, sinon le navigateur ajoute le site sous « Chargement… » au lieu de le remplacer
@@ -21,17 +24,22 @@
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go, { once: true }); else go();
   }
   try { app = JSON.parse(localStorage.getItem(K) || "null"); } catch (e) {}
-  if (app && app.html) boot(app.html);
+  if (app && !ok(app.html)) { try { localStorage.removeItem(K); } catch (e) {} app = null; }
+  if (app) boot(app.html);
   fetch(API + "?asset=app&v=" + encodeURIComponent((app && app.v) || ""))
     .then(function (r) { return r.json(); })
     .then(function (j) {
       if (j.meme) return;
+      if (!ok(j.html)) {
+        if (!app) msg("Le site est en cours de mise à jour, réessaie dans quelques minutes.<br><small>(Apps Script : le fichier « Index » ne contient pas le site.)</small>");
+        return;
+      }
       try { localStorage.setItem(K, JSON.stringify(j)); } catch (e) {}
-      if (!app || !app.html) boot(j.html); else window.dispatchEvent(new CustomEvent("missions-maj"));
+      if (!app) boot(j.html); else window.dispatchEvent(new CustomEvent("missions-maj"));
     })
     .catch(function () {
       // serveur pas encore à jour : on affiche la version Google classique
-      if (!app || !app.html) document.body.innerHTML = '<iframe src="' + API + '" title="Missions Abdalah" style="display:block;border:0;width:100%;height:100%"></iframe>';
+      if (!app) document.body.innerHTML = '<iframe src="' + API + '" title="Missions Abdalah" style="display:block;border:0;width:100%;height:100%"></iframe>';
     });
 })();
 </script>
