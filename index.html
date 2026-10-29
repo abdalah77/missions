@@ -16,7 +16,9 @@
   var K = "missions.app.code", app = null;
   function boot(html) {
     html = html.replace("<head>", "<head><script>window.MISSIONS_API=" + JSON.stringify(API) + "<\/script>");
-    document.open(); document.write(html); document.close();
+    // attendre la fin de la lecture de cette page, sinon le navigateur ajoute le site sous « Chargement… » au lieu de le remplacer
+    var go = function () { document.open(); document.write(html); document.close(); };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go, { once: true }); else go();
   }
   try { app = JSON.parse(localStorage.getItem(K) || "null"); } catch (e) {}
   if (app && app.html) boot(app.html);
